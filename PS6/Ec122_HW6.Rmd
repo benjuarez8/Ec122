@@ -1,0 +1,345 @@
+---
+title: "Ec122 - HW6"
+author: "Ben Juarez"
+date: "11/7/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# HGL 7.1
+```{r}
+setwd("~/Desktop/R")
+metrics = read.table("dat/metrics.dat")
+colnames(metrics) = c("salary", "gpa", "metrics", "female")
+```
+
+# Part a
+```{r}
+SAL = metrics$salary
+GPA = metrics$gpa
+METRICS = metrics$metrics
+
+metrics_lm = lm(SAL ~ GPA + METRICS)
+summary(metrics_lm)
+```
+With this estimated equation, we can interpret several things.  With a 1 unit increase in GPA, we estimate a 1,643 dollar increase in salary.  Those who take econometrics are estimated to have a 5033 dollar increase in salary relative to those who did not take econometrics.  Someone who did not take econometrics and had a 0.0 GPA would theoretically have a starting salary of 24,200 dollars.  With $R^2=74$, we can determine that GPA and METRICS explains $74\%$ of the variation.
+
+# Part b
+We modify the equation as follows to take gender into account:
+$$
+\hat{SAL} = \beta_1 + \beta_2 \cdot GPA + \beta_3 \cdot METRICS + \beta_4 \cdot FEMALE + e
+$$
+
+$$
+\implies \hat{SAL} = \begin{cases} (\beta_1 + \beta_4) + \beta_2 \cdot GPA + \beta_3 \cdot METRICS & FEMALE=1\\ \beta_1 + \beta_2 \cdot GPA + \beta_3 \cdot METRICS  & FEMALE = 0\end{cases}
+$$
+
+# Part c
+Let us modify the equation in  order to see if the value of econometrics was the same for men and women by using a slope-indicator variable:
+$$
+\hat{SAL} = \beta_1 + \beta_2 \cdot GPA + \beta_3 \cdot METRICS + \beta_4 \cdot FEMALE + \beta_5 (METRICS \times FEMALE) + e
+$$
+$$
+\implies \hat{SAL} \begin{cases} (\beta_1 + \beta_4) + \beta_2 \cdot GPA + (\beta_3 + \beta_5) METRICS  & FEMALE=1\\ \beta_1 + \beta_2 \cdot GPA + \beta_3 \cdot METRICS  & FEMALE = 0\end{cases}
+$$
+This way, we can see that $\beta_5$ will help us determine the change in slope between females and males.
+
+# HGL 7.5
+```{r}
+setwd("~/Desktop/R")
+utown = read.table("dat/utown.dat")
+colnames(utown) = c("price", "sqft", "age", "utown", "pool", "fplace")
+```
+
+# Part a
+Let us estimate the model as follows:
+$$
+ln(PRICE) = \beta_1 + \delta_1 \cdot UTOWN + \beta_2 \cdot SQFT + \gamma (SQFT \times UTOWN) + \beta_3 \cdot AGE + \delta_2 \cdot POOL + \delta_3 FPLACE + e
+$$
+```{r}
+PRICE = utown$price
+UTOWN = utown$utown
+SQFT = utown$sqft
+AGE = utown$age
+POOL = utown$pool
+FPLACE = utown$fplace
+
+price_llr = lm(log(PRICE) ~ UTOWN + SQFT + (SQFT * UTOWN) + AGE + POOL + FPLACE)
+summary(price_llr)
+```
+
+# Part b
+Let us interpret SQFT and AGE as follows using partial derivatives:
+$$
+\frac{\partial PRICE}{\partial AGE} (\frac{1}{PRICE}) = \beta_3
+$$
+With this, we can determine that 1 year increase in the age of the house implies that it is estimated to sell for $0.09\%$ less.
+$$
+\frac{\partial PRICE}{\partial SQFT} (\frac{1}{PRICE}) = \beta_2 + \gamma \cdot UTOWN
+$$
+With this, we can determine that an increase in SQFT implies either a $3.6\%$ (not close to university) or $0.0359-0.0034 \implies 3.25\%$ (close to university).  
+
+# Part c
+Let us find both a rough and exact calculation of the percentage change in price due to the presence of a pool:
+$$
+ln(PRICE)_{\text{pool}} - ln(PRICE)_{\text{no pool}} = \delta_2 \implies 0.019 \cdot 100 = 1.90\%
+$$
+$$
+\frac{PRICE_\text{pool} - PRICE_\text{no pool}}{PRICE_\text{pool}} = e^{\delta_2} - 1 \implies 0.01917 \cdot 100 = 1.92\%
+$$
+
+# Part d
+Let us find both a rough and exact calculation of the percentage change in price due to the presence of a fireplace:
+$$
+ln(PRICE)_{\text{fireplace}} - ln(PRICE)_{\text{no fireplace}} = \delta_3 \implies 0.0065561 \cdot 100 = 0.66\%
+$$
+$$
+\frac{PRICE_\text{fireplace} - PRICE_\text{no fireplace}}{PRICE_\text{fireplace}} = e^{\delta_3} - 1 \implies 0.006577638 \cdot 100 = 0.66\%
+$$
+
+# Part e
+Let us compute the percentage change in price of 2500-square-foot home close to the university relative to another house in another location as follows:
+$$
+\hat{ln(PRICE_{\text{close to U}})}|_{SQFT=25} - \hat{ln(PRICE_{\text{NOT close to U}})}|_{SQFT=25} = \beta_2-\gamma(25)= 0.0333-0.00343(25)=0.248
+$$
+$$
+\implies (e^{0.0248} - 1) \cdot 100 = 28.1\%
+$$
+Thus, we have a $28.1\%$ increase in price for being close to the university.
+
+# HGL 7.9
+```{r}
+setwd("~/Desktop/R")
+star = read.table("dat/star.dat")
+colnames(star) = c("id", "schid", "tchid", "tchexper", "absent", "readscore", "mathscore", "totalscore", "boy", "white_asian", "black", "tchwhite", "tchmasters", "freelunch", "schurban", "schrural", "small", "regular", "aide")
+```
+
+# Part a
+```{r}
+mean(subset(star, regular==1)$totalscore)
+mean(subset(star, aide==1)$totalscore)
+mean(subset(star, small==1)$totalscore)
+```
+The averages for (i), (ii), (iii) are calculated as shown, respectively.  We can see that the test scores are higher in the smaller class, and that the presence of an aide does not seem to impact total test scores.
+
+# Part b
+Let us estimate the following model: $TOTALSCORE_i = \beta_1 + \beta_2 \cdot SMALL_i + \beta_3 \cdot AIDE_i + e_i$ where $AIDE$ is an indicator variable.
+```{r}
+TOTALSCORE = star$totalscore
+SMALL = star$small
+AIDE = star$aide
+
+b_lm = lm(TOTALSCORE ~ SMALL + AIDE)
+summary(b_lm)
+```
+We can see that $931.94-918.04 = 13.899$, relating the coefficient of SMALL to the averages such that it is the difference between the average score of small classes and the average score of regular classes.  Similarly, with $918.3568-0.3139=918.0429$, we see that the coefficient of AIDE is the difference between average score of classes with aides and average score of classes without aides (both for regular classes).
+
+Let us test the statistical significance of $\beta_3$ at a $5\%$ level of significance with $t_c=1.96$:
+$$
+t = \frac{b_3}{se(b_3)} = 0.136 < 1.96=t_c
+$$
+Thus, we cannot conclude that there is significant difference between total test scores in regular classes with no aide and in regular classes with an aide (fail to reject null hypothesis $\beta_3=0$).
+
+# Part c
+Let us estimate the following model: $TOTALSCORE_i = \beta_1 + \beta_2 \cdot SMALL_i + \beta_3 \cdot AIDE_i + \beta_4 \cdot TCHEXPER + e_i$ where $AIDE$ is an indicator variable.
+```{r}
+TOTALSCORE = star$totalscore
+SMALL = star$small
+AIDE = star$aide
+TCHEXPER = as.integer(star$tchexper)
+
+c_lm = lm(TOTALSCORE ~ SMALL + AIDE + TCHEXPER)
+summary(c_lm)
+```
+Let us determine if this variable is statistically significant ($5\%$ level of significance):
+$$
+t = \frac{b_4}{se(b_4)} = 8.78 > t_c = 1.96
+$$
+Thus, we can say that this variable is statistically significant since we reject the null hypothesis that $\beta_4=0$.  We can also see that there is some change to $\beta_2, \beta_3$ since $\beta_2$ went from 13.9 to 14.0 while $\beta_3$ changed signs (very little impact).
+
+# Part d
+Let us estimate the following model: $TOTALSCORE_i = \beta_1 + \beta_2 \cdot SMALL_i + \beta_3 \cdot AIDE_i + \beta_4 \cdot TCHEXPER + \beta_5 \cdot BOY + \beta_6 \cdot FREELUNCH + \beta_7 \cdot WHITE_ASIAN + e_i$ where $AIDE$ is an indicator variable.
+```{r}
+TOTALSCORE = star$totalscore
+SMALL = star$small
+AIDE = star$aide
+TCHEXPER = as.integer(star$tchexper)
+BOY = star$boy
+FREELUNCH = star$freelunch
+WHITE_ASIAN = star$white_asian
+
+d_lm = lm(TOTALSCORE ~ SMALL + AIDE + TCHEXPER + BOY + FREELUNCH + WHITE_ASIAN)
+summary(d_lm)
+```
+We can say that these new variables are statistically significant considering the summary (all at $1\%$ level).  We also again see very small changes to $\beta_2, \beta_3$, so we can say that these estimates are not meaningfully affected.
+
+# Part e
+Let us estimate the following model: $TOTALSCORE_i = \beta_1 + \beta_2 \cdot SMALL_i + \beta_3 \cdot AIDE_i + \beta_4 \cdot TCHEXPER + \beta_5 \cdot BOY + \beta_6 \cdot FREELUNCH + \beta_7 \cdot WHITE_ASIAN + \beta_8 \cdot TCHWHITE + \beta_9 \cdot TCHMASTERS + \beta_10 \cdot SCHURBAN + \beta_11 \cdot SCHRURAL + e_i$ where $AIDE$ is an indicator variable.
+```{r}
+TOTALSCORE = star$totalscore
+SMALL = star$small
+AIDE = star$aide
+TCHEXPER = as.integer(star$tchexper)
+BOY = star$boy
+FREELUNCH = star$freelunch
+WHITE_ASIAN = star$white_asian
+TCHWHITE = star$tchwhite
+TCHMASTERS = star$tchmasters
+SCHURBAN = star$schurban
+SCHRURAL = star$schrural
+
+e_lm = lm(TOTALSCORE ~ SMALL + AIDE + TCHEXPER + BOY + FREELUNCH + WHITE_ASIAN + TCHWHITE + TCHMASTERS + SCHURBAN + SCHRURAL)
+summary(e_lm)
+```
+Following the summary, we can see that TCHWHITE, SCHRURAL are significant at the $1\%$ level, SCHURBAN is significant at the $5\%$ level, and TCHMASTERS is significant at the $10\%$ level (failed to reject at $5\%$ level).  Again we see minimal changes to $\beta_2$ and $\beta_3$.
+
+# Part f
+Considering the previous parts, it is interesting to see that the added variables are statistically significant themselves, but we still saw very little impact to the main factors of SMALL and AIDE, which reinforces that these are the key variables.  This also tells us that the added variables are uncorrelated to our key variables and treatment effects.
+
+# Part g
+```{r}
+library("car")
+SCHID = star$schid
+g_lm = lm(TOTALSCORE ~ SMALL + AIDE + TCHEXPER + BOY + FREELUNCH + WHITE_ASIAN + TCHWHITE + TCHMASTERS + as.factor(SCHID))
+linearHypothesis(g_lm, matchCoefs(g_lm,"SCHID"))
+```
+Testing the joint significance of these school "fixed effects" gives us an $F$-value of 19.15 which is greater than $F_c = 1.28$ ($5\%$ level), so we reject the null hypothesis implying that that (at least several of) the school effects are non-zero.  We have a very slight increase to $\beta_2$ and $\beta_3$ such that $\beta_2$ is significant while $\beta_3$ is not significant.  
+
+
+# HGL 8.19
+
+# Part a
+Let us estimate the given wage equation as follows:
+```{r}
+setwd("~/Desktop/R")
+data = read.table("dat/cps4_small.dat")
+colnames(data) = c("wage", "educ", "exper", "hrswk", "married", "female", "metro", "midwest", "south", "west", "black", "asian")
+
+WAGE = data$wage
+EDUC = data$educ
+EXPER = data$exper
+EXPER_2 = EXPER^2
+library("lmtest")
+wage_llr = lm(log(WAGE) ~ EDUC + EXPER + EXPER_2 + (EXPER*EDUC))
+summary(wage_llr)
+coeftest(wage_llr, vcov.=hccm(wage_llr,type="hc1"))
+```
+
+# Part b
+Let us now add MARRIED to the given wage equation:
+```{r}
+WAGE = data$wage
+EDUC = data$educ
+EXPER = data$exper
+EXPER_2 = EXPER^2
+MARRIED = data$married
+
+wage_llr_b = lm(log(WAGE) ~ EDUC + EXPER + EXPER_2 + (EXPER*EDUC) + MARRIED)
+summary(wage_llr_b)
+```
+Let us now test ($5\%$ level of significance) a null hypothesis that wages of married workers are less than or equal to those of unmarried workers against the alternative that wages of married workers are higher:
+$$
+H_0:\beta_6 \leq 0 \text{ vs } H_1:\beta_6 > 0 \implies t = \frac{b_6}{se(b_6)} = 1.19 < 1.65 = t_c
+$$
+Thus, we fail to reject $H_0$ meaning that we cannot conclude that married workers have meaningfully higher wages than unmarried workers.
+
+# Part c
+```{r}
+plot(MARRIED, resid(wage_llr))
+```
+
+We can determine that there is evidence of heteroskedasticity since we can see that variance for married workers is greater than that of unmarried workers (in a systematic way).
+
+# Part d
+Let us estimate the model from part (a) using observations from married workers:
+```{r}
+WAGE = subset(data, married==1)$wage
+EDUC = subset(data, married==1)$educ
+EXPER = subset(data, married==1)$exper
+EXPER_2 = EXPER^2
+
+wage_llr_d1 = lm(log(WAGE) ~ EDUC + EXPER + EXPER_2 + (EXPER*EDUC))
+summary(wage_llr_d1)
+```
+Let us now estimate the same model with observations from unmarried workers
+```{r}
+WAGE = subset(data, married==0)$wage
+EDUC = subset(data, married==0)$educ
+EXPER = subset(data, married==0)$exper
+EXPER_2 = EXPER^2
+
+wage_llr_d2 = lm(log(WAGE) ~ EDUC + EXPER + EXPER_2 + (EXPER*EDUC))
+summary(wage_llr_d2)
+```
+
+Let us now use the Goldfeld-Quandt test and a 5% significance level to test whether the error variances for married and unmarried workers are different:
+$$
+H_0:\sigma_M^2 = \sigma_{UM}^2 \text{ vs } H_1:\sigma_M^2 \neq \sigma_{UM}^2
+$$
+```{r}
+sigma(wage_llr_d1)^2
+sigma(wage_llr_d2)^2
+```
+
+$$
+\implies F = \frac{\hat{\sigma_{UM}}^2}{\hat{\sigma_{M}}^2} = \frac{0.213}{0.287} = 0.743 < 0.835 = F_c
+$$
+Thus, we reject $H_0$ implying that the error variances for married and unmarried workers are not equal.
+
+# Part e
+```{r}
+library("nlme")
+WAGE = data$wage
+EDUC = data$educ
+EXPER = data$exper
+EXPER_2 = EXPER^2
+
+w = rep(1:1000)
+for (i in 1:1000) {
+  if (data$married[i] == 1) {
+    w[i] = 1/(sigma(wage_llr_d1)^2)
+  }
+  else {
+    w[i] = 1/(sigma(wage_llr_d2)^2)
+  }
+}
+
+glsm = lm(log(WAGE) ~ EDUC + EXPER + EXPER_2 + (EXPER*EDUC), weights = w)
+summary(glsm)
+```
+Looks like the coefficient estimates are very similar.  The standard errors in the generalized least squares model slightly less than those from part (a).
+
+# Part f
+Let us find two $95\%$ interval estimates for a worker with 16 years of education and 10 years of experience for the given marginal effect with $t_c=1.96$.  Let us use part (a) first:
+$$
+\frac{\partial E(ln(WAGE))}{\partial EDUC} = \beta_2 + EXPER \cdot \beta_5 = 0.127 - 0.00132 \cdot 10 = 0.114
+$$
+```{r}
+library("sandwich")
+a = lm(log(WAGE) ~ EDUC + EXPER + EXPER_2 + (EDUC*EXPER))
+var_b2 = vcov(a)[2,2]
+var_b5 = vcov(a)[5,5]
+cov_b2_b5 = vcov(a)[2,5]
+sqrt(var_b2 + 10^2*var_b5 + 2*10*cov_b2_b5)
+```
+
+$$
+\implies 0.114 \pm t_c \cdot se = 0.114 \pm 1.96 \cdot 0.0104 = (0.0936,0.134)
+$$
+Now, let us use part (e) first:
+$$
+\frac{\partial E(ln(WAGE))}{\partial EDUC} = \beta_2 + EXPER \cdot \beta_5 = 0.131 - 0.001443 \cdot 10 = 0.116
+$$
+```{r}
+library("sandwich")
+var_b2 = vcov(glsm)[2,2]
+var_b5 = vcov(glsm)[5,5]
+cov_b2_b5 = vcov(glsm)[2,5]
+sqrt(var_b2 + 10^2*var_b5 + 2*10*cov_b2_b5)
+```
+
+$$
+\implies 0.116 \pm t_c \cdot se = 0.116 \pm 1.96 \cdot 0.010193 = (0.0960,0.136)
+$$
+We can see that the interval estimates are very similar, but the interval from part (e) is just barely tighter than the interval from part (a) which makes sense.

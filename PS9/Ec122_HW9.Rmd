@@ -1,0 +1,398 @@
+---
+title: "Ec122 - HW9"
+author: "Ben Juarez"
+date: "11/28/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# (2)
+In the future, if I were to win a Nobel Prize for something in economics, it would perhaps be related to cryptocurrency.  The future implications of cryptocurrency are seemingly endless, and there would many different angles to research and study (which might result in a Nobel Prize!).  At this point, it does not seem like cryptocurrency is something that is going to go away, so in the near future, we are likely to see an even fuller scale of adoption of cryptocurrency methods.  In particular, once major world governments begin to adopt certain cryptocurrency standards, then there will be an even greater demand for understanding its impact on our economy.  Even though cryptocurrency is already quite prominent, there is still much unknown about its future implications, which leaves open potential for major discoveries and research!
+
+# (3)
+
+## 3.1
+```{r}
+library("MASS")
+mu = c(0,0)
+Sigma_e = matrix(c(1,-.9,-.9,1),2,2)
+Sigma_x = matrix(c(1,.9,.9,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+```
+
+## 3.2
+```{r}
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out2 = lm(y1z ~ x1z)
+summary(out2)
+```
+We can see that we have close to 2000 pairs of $(y_1,x_1)$ such that $z=1$.  Since we know $z=1$ only when $y_2 >0$, and since $x_2>0$ is true for about half of its values due to the $N(0,1)$ distribution, we can see that if $x_2>0$ then $y_2>0$.  Thus, around half of $y_2$ values will also be positive.
+
+Considering out estimates for $\alpha_1$ and $\beta_1$, we can see that they are both close 2 and that they are significant at the $5\%$ level following our summary output.  However, we still are ignoring the correlation between $x_1$ and $x_2$.
+
+## 3.3
+```{r}
+library("stats")
+out3 = glm(z ~ x2, family = binomial(link = probit))
+summary(out3)
+B2 = out3$coefficients[2]
+B2
+```
+We can see that $\hat{\beta_2}$ (displayed above) is close to 4.
+
+## 3.4
+```{r}
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out4 = lm(y1z ~ x1z + lambda)
+summary(out4)
+```
+It appears that the estimates of $\alpha_1$ and $\beta_1$ in this case are much closer to 2 (compared to the previous part).  The estimates also have similar standard errors and significance ($5\%$ level).  Overall, it looks like a more accurate estimation.
+
+## 3.5
+Let us repeat parts 1-4 for $\rho_{\epsilon_1, \epsilon_2}=-.5,0.,.5,.9$:
+
+### 3.5.i
+For $\rho_{\epsilon_1, \epsilon_2}=-.5$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,-.5,-.5,1),2,2)
+Sigma_x = matrix(c(1,.9,.9,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out5ia = lm(y1z ~ x1z)
+summary(out5ia)
+
+out5ib = glm(z ~ x2, family = binomial(link = probit))
+summary(out5ib)
+B2 = out5ib$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out5ic = lm(y1z ~ x1z + lambda)
+summary(out5ic)
+```
+We can see that the first OLS estimates are more accurate relative to part (2).  This is likely due to the lower correlation.  Including $\lambda(\hat{-\beta_2}x_2)$ similarly increases the accuracy of the estimates closer to 2.
+
+
+### 3.5.ii
+For $\rho_{\epsilon_1, \epsilon_2}=0$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,0,0,1),2,2)
+Sigma_x = matrix(c(1,.9,.9,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out5iia = lm(y1z ~ x1z)
+summary(out5iia)
+
+out5iib = glm(z ~ x2, family = binomial(link = probit))
+summary(out5iib)
+B2 = out5iib$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out5iic = lm(y1z ~ x1z + lambda)
+summary(out5iic)
+```
+Since the errors are now uncorrelated, the first OLS estimates are even more accurate (closer to 2).  With this, including $\lambda(\hat{-\beta_2}x_2)$ does not improve the estimates in the same way as before, and the lambda coefficient is not as significant.
+
+### 3.5.iii
+For $\rho_{\epsilon_1, \epsilon_2}=.5$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,.5,.5,1),2,2)
+Sigma_x = matrix(c(1,.9,.9,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out5iiia = lm(y1z ~ x1z)
+summary(out5iiia)
+
+out5iiib = glm(z ~ x2, family = binomial(link = probit))
+summary(out5iiib)
+B2 = out5iiib$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out5iiic = lm(y1z ~ x1z + lambda)
+summary(out5iiic)
+```
+Similar to part (5.i), the first OLS estimates are closer to 2 relative to part (2) due to lower correlation.  Again, including $\lambda(\hat{-\beta_2}x_2)$ slightly improves the estimates.
+
+### 3.5.iv
+For $\rho_{\epsilon_1, \epsilon_2}=.9$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,.9,.9,1),2,2)
+Sigma_x = matrix(c(1,.9,.9,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out5iva = lm(y1z ~ x1z)
+summary(out5iva)
+
+out5ivb = glm(z ~ x2, family = binomial(link = probit))
+summary(out5ivb)
+B2 = out5ivb$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out5ivc = lm(y1z ~ x1z + lambda)
+summary(out5ivc)
+```
+The effects are similar to parts (2) and (4) since the correlation is of the same magnitude.
+
+## 3.6
+Let us repeat parts 1-4 for $\rho_{\epsilon_1, \epsilon_2}=-.9-.5,0.,.5,.9$ with $\rho_{x_1,x_2} = 0$:
+
+### 3.6.i
+For $\rho_{\epsilon_1, \epsilon_2}=-.9$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,-.9,-.9,1),2,2)
+Sigma_x = matrix(c(1,0,0,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out6ia = lm(y1z ~ x1z)
+summary(out6ia)
+
+out6ib = glm(z ~ x2, family = binomial(link = probit))
+summary(out6ib)
+B2 = out6ib$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out6ic = lm(y1z ~ x1z + lambda)
+summary(out6ic)
+```
+We see similar effects as in parts (2) and (4) with the same error covariance.  However, we see that there was not much change to $\beta_1$ estimate while we see the familiar improvement for $\alpha_1$.
+
+### 3.6.ii
+For $\rho_{\epsilon_1, \epsilon_2}=-.5$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,-.5,-.5,1),2,2)
+Sigma_x = matrix(c(1,0,0,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out6iia = lm(y1z ~ x1z)
+summary(out6iia)
+
+out6iib = glm(z ~ x2, family = binomial(link = probit))
+summary(out6iib)
+B2 = out6iib$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out6iic = lm(y1z ~ x1z + lambda)
+summary(out6iic)
+```
+The first OLS estimates are slightly better than the previous part, and including $\lambda(\hat{-\beta_2}x_2)$ similarly helps increase the accuracy.  However, this improvement is mainly in $\alpha_1$.
+
+### 3.6.iii
+For $\rho_{\epsilon_1, \epsilon_2}=0$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,0,0,1),2,2)
+Sigma_x = matrix(c(1,0,0,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out6iiia = lm(y1z ~ x1z)
+summary(out6iiia)
+
+out6iiib = glm(z ~ x2, family = binomial(link = probit))
+summary(out6iiib)
+B2 = out6iiib$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out6iiic = lm(y1z ~ x1z + lambda)
+summary(out6iiic)
+```
+We see that the first OLS estimates are much more improved in this case while including $\lambda(\hat{-\beta_2}x_2)$ does not help in the same way.  As before, the lambda coefficient is not as significant. 
+
+### 3.6.iv
+For $\rho_{\epsilon_1, \epsilon_2}=.5$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,.5,.5,1),2,2)
+Sigma_x = matrix(c(1,0,0,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out6iva = lm(y1z ~ x1z)
+summary(out6iva)
+
+out6ivb = glm(z ~ x2, family = binomial(link = probit))
+summary(out6ivb)
+B2 = out6ivb$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out6ivc = lm(y1z ~ x1z + lambda)
+summary(out6ivc)
+```
+We see the same pattern such that including $\lambda(\hat{-\beta_2}x_2)$ slightly improves the first OLS estimates, but the estimate for $\beta_2$ doesn't change much, again.
+
+### 3.6.v
+For $\rho_{\epsilon_1, \epsilon_2}=.9$:
+```{r}
+mu = c(0,0)
+Sigma_e = matrix(c(1,.9,.9,1),2,2)
+Sigma_x = matrix(c(1,0,0,1),2,2)
+epsilon = mvrnorm(4000,mu,Sigma_e)
+x = mvrnorm(4000,mu,Sigma_x)
+
+x1 = x[,1]
+x2 = x[,2]
+e1 = epsilon[,1]
+e2 = epsilon[,2]
+
+y1 = 2 + 2 * x1 + e1
+y2 = 4 * x2 + e2
+z = ifelse(y2>0,1,0)
+
+y1z = y1[z > 0]
+x1z = x1[z > 0]
+length(y1z)
+out6va = lm(y1z ~ x1z)
+summary(out6va)
+
+out6vb = glm(z ~ x2, family = binomial(link = probit))
+summary(out6vb)
+B2 = out6vb$coefficients[2]
+B2
+
+x2z = x2[z>0]
+lambda = dnorm(-B2*x2z) / (1-pnorm(-B2*x2z))
+out6vc = lm(y1z ~ x1z + lambda)
+summary(out6vc)
+```
+Again, we see the same pattern but in this case the first OLS estimates (mainly $\alpha_1$) are not as good as they were in the previous part.
+
+## 3.7 
+Considering parts (5) and (6) as a whole, we see similar patterns.  It seems that for both the correlations between $x_1$ and $x_2$ and between $\epsilon_1$ and $\epsilon_2$, when the magnitude of the correlation decreases, the OLS estimates have a greater accuracy.  For part (6), we can see that when the correlation between the $x$'s was zero, the $\beta_1$ estimation was not changing much when we incorporated $\lambda(\hat{-\beta_2}x_2)$ which makes sense.  Furthermore, besides this case, when the correlation is nonzero, including $\lambda(\hat{-\beta_2}x_2)$ generally improves the estimates.  On a similar note, when the correlation was 0, the lambda coefficient term was not as significant each time.
+
